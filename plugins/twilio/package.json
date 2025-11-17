@@ -31,7 +31,7 @@
       "@scrypted/sdk": "file:../../sdk"
    },
    "dependencies": {
-      "axios": "^0.18.0",
+      "axios": "^1.12.0",
       "qs": "^6.6.0"
    }
 }
