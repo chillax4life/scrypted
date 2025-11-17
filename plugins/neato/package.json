@@ -35,7 +35,7 @@
       "webpack-merge": "^4.2.1"
    },
    "dependencies": {
-      "axios": "^0.19.2",
+      "axios": "^1.12.0",
       "crypto-js": "^3.1.9-1",
       "node-botvac": "file:./node-botvac"
    }
