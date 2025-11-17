@@ -34,7 +34,7 @@
    "dependencies": {
       "@koush/axios-digest-auth": "^0.8.5",
       "@scrypted/sdk": "file:../../sdk",
-      "@types/node": "^16.9.1",
+      "@types/node": "^16.18.126",
       "base-64": "^1.0.0",
       "md5": "^2.3.0",
       "onvif": "^0.6.5",
