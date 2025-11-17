@@ -37,7 +37,7 @@
       "@types/node": "^16.9.1",
       "base-64": "^1.0.0",
       "md5": "^2.3.0",
-      "onvif": "^0.6.5",
+      "onvif": "^0.8.1",
       "syno": "^2.2.0"
    },
    "devDependencies": {
