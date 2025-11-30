@@ -31,7 +31,7 @@
       ]
    },
    "dependencies": {
-      "axios": "^0.24.0"
+      "axios": "^1.12.0"
    },
    "devDependencies": {
       "@scrypted/sdk": "file:../../sdk",
