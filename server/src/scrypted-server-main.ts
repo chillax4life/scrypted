@@ -438,7 +438,7 @@ async function start() {
     }
 
     // Helper function to get username from request
-    function getUsernameFromCookie(req): string | null {
+    function getUsernameFromCookie(req: any): string | null {
         const { login_user_token } = req.signedCookies;
         if (!login_user_token) {
             return null;

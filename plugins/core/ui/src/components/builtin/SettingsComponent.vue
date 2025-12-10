@@ -179,6 +179,8 @@ import axios from "axios";
 import throttle from "lodash/throttle";
 import qs from "query-string";
 
+const TOKEN_MESSAGE_TIMEOUT = 3000; // 3 seconds
+
 export default {
   data() {
     return {
@@ -284,7 +286,7 @@ export default {
             this.tokenError = false;
             setTimeout(() => {
               this.tokenMessage = '';
-            }, 3000);
+            }, TOKEN_MESSAGE_TIMEOUT);
           })
           .catch((error) => {
             this.tokenMessage = 'Failed to copy token';
@@ -304,7 +306,7 @@ export default {
           this.tokenError = false;
           setTimeout(() => {
             this.tokenMessage = '';
-          }, 3000);
+          }, TOKEN_MESSAGE_TIMEOUT);
         } catch (error) {
           this.tokenMessage = 'Failed to copy token';
           this.tokenError = true;
