@@ -503,6 +503,58 @@ async function start() {
         })
     });
 
+    app.get('/web/api/token', async (req, res) => {
+        const { login_user_token } = req.signedCookies;
+        if (!login_user_token) {
+            res.status(401).send({ error: 'Not logged in.' });
+            return;
+        }
+
+        const userTokenParts = login_user_token.split('#');
+        const username = userTokenParts[0];
+        
+        const user = await db.tryGet(ScryptedUser, username);
+        if (!user) {
+            res.status(404).send({ error: 'User not found.' });
+            return;
+        }
+
+        if (!user.token) {
+            user.token = crypto.randomBytes(16).toString('hex');
+            await db.upsert(user);
+        }
+
+        res.send({
+            username,
+            token: user.token,
+        });
+    });
+
+    app.post('/web/api/token/regenerate', async (req, res) => {
+        const { login_user_token } = req.signedCookies;
+        if (!login_user_token) {
+            res.status(401).send({ error: 'Not logged in.' });
+            return;
+        }
+
+        const userTokenParts = login_user_token.split('#');
+        const username = userTokenParts[0];
+        
+        const user = await db.tryGet(ScryptedUser, username);
+        if (!user) {
+            res.status(404).send({ error: 'User not found.' });
+            return;
+        }
+
+        user.token = crypto.randomBytes(16).toString('hex');
+        await db.upsert(user);
+
+        res.send({
+            username,
+            token: user.token,
+        });
+    });
+
     app.get('/', (_req, res) => res.redirect('/endpoint/@scrypted/core/public/'));
 }
 

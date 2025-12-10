@@ -1,6 +1,71 @@
 <template>
   <v-layout>
     <v-flex xs12 md6 lg4>
+      <!-- Personal Access Token Section -->
+      <v-card class="mb-4" dark>
+        <v-card-title>Personal Access Token</v-card-title>
+        <v-card-text>
+          <p class="caption mb-3">
+            Use this token to authenticate API requests and integrate Scrypted with external applications.
+            Keep your token secure - it provides full access to your Scrypted server.
+          </p>
+          <v-text-field
+            v-model="token"
+            readonly
+            outlined
+            dense
+            :type="showToken ? 'text' : 'password'"
+            label="Token"
+            :loading="tokenLoading"
+            :append-icon="showToken ? 'visibility' : 'visibility_off'"
+            @click:append="showToken = !showToken"
+          >
+            <template v-slot:append-outer>
+              <v-btn
+                small
+                icon
+                @click="copyToken"
+                :disabled="!token"
+                title="Copy to clipboard"
+              >
+                <v-icon small>content_copy</v-icon>
+              </v-btn>
+            </template>
+          </v-text-field>
+          <v-btn
+            small
+            outlined
+            color="orange"
+            @click="regenerateDialog = true"
+            :disabled="tokenLoading"
+            class="mt-2"
+          >
+            <v-icon small left>refresh</v-icon>
+            Regenerate Token
+          </v-btn>
+          <div v-if="tokenMessage" class="mt-2 caption" :class="tokenError ? 'error--text' : 'success--text'">
+            {{ tokenMessage }}
+          </div>
+        </v-card-text>
+      </v-card>
+
+      <!-- Regenerate Token Confirmation Dialog -->
+      <v-dialog v-model="regenerateDialog" width="500">
+        <v-card color="orange" dark>
+          <v-card-title primary-title>Regenerate Token</v-card-title>
+          <v-card-text>
+            Are you sure you want to regenerate your personal access token? 
+            This will invalidate the current token and any integrations using it will need to be updated.
+          </v-card-text>
+          <v-divider></v-divider>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn text @click="regenerateDialog = false">Cancel</v-btn>
+            <v-btn text @click="doRegenerateToken">Regenerate</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
       <!-- <GmapMap
         :center="position"
         :zoom="16"
@@ -122,6 +187,12 @@ export default {
       restartStatus: undefined,
       showRestart: false,
       showUpdate: false,
+      token: '',
+      showToken: false,
+      tokenLoading: false,
+      tokenMessage: '',
+      tokenError: false,
+      regenerateDialog: false,
     };
   },
   // data() {
@@ -142,6 +213,7 @@ export default {
   // },
   mounted() {
     this.loadEnv();
+    this.loadToken();
     // this.$refs.mapRef.$mapPromise.then(() => {
     //   let element = this.$refs.locationAutocomplete.$el;
     //   element = element.querySelector("input");
@@ -168,6 +240,63 @@ export default {
     //   });
   },
   methods: {
+    async loadToken() {
+      this.tokenLoading = true;
+      this.tokenMessage = '';
+      this.tokenError = false;
+      try {
+        const response = await axios.get('/web/api/token');
+        this.token = response.data.token;
+      } catch (error) {
+        this.tokenMessage = 'Failed to load token';
+        this.tokenError = true;
+        console.error('Failed to load token:', error);
+      } finally {
+        this.tokenLoading = false;
+      }
+    },
+    async doRegenerateToken() {
+      this.regenerateDialog = false;
+      this.tokenLoading = true;
+      this.tokenMessage = '';
+      this.tokenError = false;
+      try {
+        const response = await axios.post('/web/api/token/regenerate');
+        this.token = response.data.token;
+        this.tokenMessage = 'Token regenerated successfully';
+        this.tokenError = false;
+      } catch (error) {
+        this.tokenMessage = 'Failed to regenerate token';
+        this.tokenError = true;
+        console.error('Failed to regenerate token:', error);
+      } finally {
+        this.tokenLoading = false;
+      }
+    },
+    copyToken() {
+      if (!this.token) return;
+      
+      // Create a temporary input element to copy the token
+      const input = document.createElement('input');
+      input.value = this.token;
+      document.body.appendChild(input);
+      input.select();
+      
+      try {
+        document.execCommand('copy');
+        this.tokenMessage = 'Token copied to clipboard';
+        this.tokenError = false;
+        setTimeout(() => {
+          this.tokenMessage = '';
+        }, 3000);
+      } catch (error) {
+        this.tokenMessage = 'Failed to copy token';
+        this.tokenError = true;
+        console.error('Failed to copy token:', error);
+      } finally {
+        document.body.removeChild(input);
+      }
+    },
     async loadEnv() {
       const info = await this.$scrypted.systemManager.getComponent("info");
       const env = await info.getScryptedEnv();
