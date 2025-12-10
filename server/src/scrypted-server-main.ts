@@ -432,6 +432,21 @@ async function start() {
     });
 
 
+    // Helper function to generate a secure token
+    function generateToken(): string {
+        return crypto.randomBytes(32).toString('hex');
+    }
+
+    // Helper function to get username from request
+    function getUsernameFromCookie(req): string | null {
+        const { login_user_token } = req.signedCookies;
+        if (!login_user_token) {
+            return null;
+        }
+        const userTokenParts = login_user_token.split('#');
+        return userTokenParts[0];
+    }
+
     app.get('/login', async (req, res) => {
         if (req.protocol === 'https' && req.headers.authorization) {
             const username = await new Promise(resolve => {
@@ -445,7 +460,7 @@ async function start() {
 
             const user = await db.tryGet(ScryptedUser, username);
             if (!user.token) {
-                user.token = crypto.randomBytes(16).toString('hex');
+                user.token = generateToken();
                 await db.upsert(user);
             }
             res.send({
@@ -504,15 +519,12 @@ async function start() {
     });
 
     app.get('/web/api/token', async (req, res) => {
-        const { login_user_token } = req.signedCookies;
-        if (!login_user_token) {
+        const username = getUsernameFromCookie(req);
+        if (!username) {
             res.status(401).send({ error: 'Not logged in.' });
             return;
         }
 
-        const userTokenParts = login_user_token.split('#');
-        const username = userTokenParts[0];
-        
         const user = await db.tryGet(ScryptedUser, username);
         if (!user) {
             res.status(404).send({ error: 'User not found.' });
@@ -520,7 +532,7 @@ async function start() {
         }
 
         if (!user.token) {
-            user.token = crypto.randomBytes(16).toString('hex');
+            user.token = generateToken();
             await db.upsert(user);
         }
 
@@ -531,22 +543,19 @@ async function start() {
     });
 
     app.post('/web/api/token/regenerate', async (req, res) => {
-        const { login_user_token } = req.signedCookies;
-        if (!login_user_token) {
+        const username = getUsernameFromCookie(req);
+        if (!username) {
             res.status(401).send({ error: 'Not logged in.' });
             return;
         }
 
-        const userTokenParts = login_user_token.split('#');
-        const username = userTokenParts[0];
-        
         const user = await db.tryGet(ScryptedUser, username);
         if (!user) {
             res.status(404).send({ error: 'User not found.' });
             return;
         }
 
-        user.token = crypto.randomBytes(16).toString('hex');
+        user.token = generateToken();
         await db.upsert(user);
 
         res.send({

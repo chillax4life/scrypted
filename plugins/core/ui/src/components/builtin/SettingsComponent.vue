@@ -276,25 +276,42 @@ export default {
     copyToken() {
       if (!this.token) return;
       
-      // Create a temporary input element to copy the token
-      const input = document.createElement('input');
-      input.value = this.token;
-      document.body.appendChild(input);
-      input.select();
-      
-      try {
-        document.execCommand('copy');
-        this.tokenMessage = 'Token copied to clipboard';
-        this.tokenError = false;
-        setTimeout(() => {
-          this.tokenMessage = '';
-        }, 3000);
-      } catch (error) {
-        this.tokenMessage = 'Failed to copy token';
-        this.tokenError = true;
-        console.error('Failed to copy token:', error);
-      } finally {
-        document.body.removeChild(input);
+      // Use modern Clipboard API with fallback
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(this.token)
+          .then(() => {
+            this.tokenMessage = 'Token copied to clipboard';
+            this.tokenError = false;
+            setTimeout(() => {
+              this.tokenMessage = '';
+            }, 3000);
+          })
+          .catch((error) => {
+            this.tokenMessage = 'Failed to copy token';
+            this.tokenError = true;
+            console.error('Failed to copy token:', error);
+          });
+      } else {
+        // Fallback for older browsers
+        const input = document.createElement('input');
+        input.value = this.token;
+        document.body.appendChild(input);
+        input.select();
+        
+        try {
+          document.execCommand('copy');
+          this.tokenMessage = 'Token copied to clipboard';
+          this.tokenError = false;
+          setTimeout(() => {
+            this.tokenMessage = '';
+          }, 3000);
+        } catch (error) {
+          this.tokenMessage = 'Failed to copy token';
+          this.tokenError = true;
+          console.error('Failed to copy token:', error);
+        } finally {
+          document.body.removeChild(input);
+        }
       }
     },
     async loadEnv() {
