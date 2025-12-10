@@ -24,6 +24,52 @@ Supported accessories:
 
 There are both [Docker and Local Installation options](https://github.com/koush/scrypted/wiki), as well as guides for connecting to HomeKit and Google Home.
 
+## Personal Access Token
+
+Personal access tokens are used to authenticate API requests and integrate Scrypted with external applications.
+
+### How to Obtain Your Personal Access Token
+
+1. Log into the Scrypted Management Console in your browser
+2. Navigate to **Settings** (found in the sidebar under Utilities)
+3. Your personal access token will be displayed on the Settings page
+4. Click the **Copy** button to copy your token to the clipboard
+
+Alternatively, you can retrieve your token via the API:
+
+```sh
+# Replace USERNAME and PASSWORD with your Scrypted credentials
+# Replace SCRYPTED_SERVER with your server address (e.g., localhost:10443)
+curl -u USERNAME:PASSWORD https://SCRYPTED_SERVER/login
+```
+
+The response will include your personal access token:
+
+```json
+{
+  "username": "admin",
+  "token": "your-token-here"
+}
+```
+
+### Using Your Personal Access Token
+
+Once you have your token, you can use it to authenticate API requests:
+
+```sh
+# Use Bearer authentication with your token
+curl -H "Authorization: Bearer YOUR_TOKEN" https://SCRYPTED_SERVER/endpoint/@scrypted/core/public/
+```
+
+Or use it in Basic Authentication:
+
+```sh
+# Use your username and token as the password
+curl -u USERNAME:TOKEN https://SCRYPTED_SERVER/endpoint/@scrypted/core/public/
+```
+
+**Important:** Keep your personal access token secure. It provides full access to your Scrypted server.
+
 ## Development
 
 ## Debug the Scrypted Server in VSCode
