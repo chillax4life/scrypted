@@ -432,6 +432,21 @@ async function start() {
     });
 
 
+    // Helper function to generate a secure token
+    function generateToken(): string {
+        return crypto.randomBytes(32).toString('hex');
+    }
+
+    // Helper function to get username from request
+    function getUsernameFromCookie(req: any): string | null {
+        const { login_user_token } = req.signedCookies;
+        if (!login_user_token) {
+            return null;
+        }
+        const userTokenParts = login_user_token.split('#');
+        return userTokenParts[0];
+    }
+
     app.get('/login', async (req, res) => {
         if (req.protocol === 'https' && req.headers.authorization) {
             const username = await new Promise(resolve => {
@@ -445,7 +460,7 @@ async function start() {
 
             const user = await db.tryGet(ScryptedUser, username);
             if (!user.token) {
-                user.token = crypto.randomBytes(16).toString('hex');
+                user.token = generateToken();
                 await db.upsert(user);
             }
             res.send({
@@ -501,6 +516,52 @@ async function start() {
             expiration: 86400000 - (Date.now() - timestamp),
             username,
         })
+    });
+
+    app.get('/web/api/token', async (req, res) => {
+        const username = getUsernameFromCookie(req);
+        if (!username) {
+            res.status(401).send({ error: 'Not logged in.' });
+            return;
+        }
+
+        const user = await db.tryGet(ScryptedUser, username);
+        if (!user) {
+            res.status(404).send({ error: 'User not found.' });
+            return;
+        }
+
+        if (!user.token) {
+            user.token = generateToken();
+            await db.upsert(user);
+        }
+
+        res.send({
+            username,
+            token: user.token,
+        });
+    });
+
+    app.post('/web/api/token/regenerate', async (req, res) => {
+        const username = getUsernameFromCookie(req);
+        if (!username) {
+            res.status(401).send({ error: 'Not logged in.' });
+            return;
+        }
+
+        const user = await db.tryGet(ScryptedUser, username);
+        if (!user) {
+            res.status(404).send({ error: 'User not found.' });
+            return;
+        }
+
+        user.token = generateToken();
+        await db.upsert(user);
+
+        res.send({
+            username,
+            token: user.token,
+        });
     });
 
     app.get('/', (_req, res) => res.redirect('/endpoint/@scrypted/core/public/'));
