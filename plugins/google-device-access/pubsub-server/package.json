@@ -17,7 +17,7 @@
     "start": "node dist/app.js"
   },
   "dependencies": {
-    "@google-cloud/datastore": "^6.5.0",
+    "@google-cloud/datastore": "^8.0.0",
     "axios": "^0.21.1",
     "client-oauth2": "^4.3.3",
     "express": "^4.17.1",
